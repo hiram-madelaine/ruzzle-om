@@ -1,0 +1,164 @@
+
+@green : green;
+@letter-size : 80px;
+
+
+
+.box-center {
+  display: -webkit-box;
+	-webkit-box-align: center;
+	-webkit-box-pack: center;
+}
+
+
+
+body {
+  font-family: helvetica;
+  font-weight : bold;
+  background-image: url('../image/back.png');
+}
+
+.board {
+
+	width : 370px;
+	height : 370px;
+	/* display : -webkit-box; */
+}
+
+
+.letter {
+	 float: left;
+    .box-center;
+
+	color : #333;
+	font-size : 50px;
+	font-weight : bold;
+
+
+	width : @letter-size;
+	height : @letter-size;
+
+	margin : 6px;
+	background : white;
+
+	border-color : black;
+	border-radius : 8px;
+	box-shadow: inset 0px -4px  6px #444, 0px 3px 4px #777;
+
+  -webkit-transition-duration: 0.12s;
+
+  position : relative;
+}
+
+h1 {
+
+	font-size : 50px;
+
+}
+
+.holder {
+	-webkit-box-flex: 0;
+	text-align : center;
+}
+
+.letter:hover {
+	-webkit-transform: scale(1.2,1.2);
+	background-color : orange;
+}
+
+.box-shadow-inner-full (@color){
+   box-shadow: inset 0px -4px  4px darken(@color, 10%),
+    inset 0px 4px  4px lighten(@color, 20%),
+    inset 4px 0px  4px @color,
+    inset -4px 0px  4px @color,
+    0px 3px 5px #777;
+}
+
+.double {
+	box-shadow: inset 0px -4px  4px darkgreen,
+    inset 0px 4px  4px lightgreen,
+    inset 4px 0px  4px green,
+    inset -4px 0px  4px green;
+}
+
+.triple {
+	.box-shadow-inner-full(#c90e17);
+}
+
+.valeur {
+    font-size : 20px;
+    position : absolute;
+    top : 10px;
+    right : 10px;
+}
+
+
+.left-top-corner {
+  position : absolute;
+  right : 55px;
+  top : -10px;
+}
+
+.bubble {
+	width: 26px;
+	height: 26px;
+	line-height: 25px;
+	border: 1px solid white;
+	-webkit-box-shadow: 0px 1px 2px 0px #333;
+	/*-webkit-box-shadow: 0px 1px 1px 0px #333 */
+	-webkit-border-radius: 30px;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#f3888b), to(#c90e17));
+	color: white;
+
+	text-align: center;
+	font-size: 10px;
+  position : absolute;
+  right : 65px;
+  top : -5px;
+
+}
+
+
+
+
+DIV.notification {
+
+  .left-top-corner;
+
+  background : white;
+  width : 38px;
+  height : 38px;
+
+  -webkit-border-radius: 9999px; //Donne le cercle.
+  -webkit-box-shadow: 0px 2px 3px 0px #666; //l'ombre portée en bas.
+
+	.box-center;
+
+  .inner {
+  	-webkit-box-flex: 0;
+
+    width : 32px;
+    height : 32px;
+
+    -webkit-border-radius: 30px;
+    -webkit-box-shadow: inset 0px 2px 3px 0px #666;
+
+    background-image:
+    -webkit-gradient(linear, center bottom, center top, from(red), to(pink));
+
+
+    .box-center;
+     color : white;
+     font-size : 12px;
+    text-shadow: 0 2px 2px #555;
+
+  }
+}
+
+
+
+  .multi {
+
+      -webkit-box-flex: 0;
+    }
+
