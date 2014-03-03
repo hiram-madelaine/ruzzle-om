@@ -20,39 +20,50 @@
 
 (defmulti letter-event (fn [[e _] app owner] e))
 
+
+(defn get-selection [owner]
+  (:selected (deref (om/get-props owner))))
+
 (defn selected?
   "Is the id of a letter already selected ?"
-  [owner id]
-  (some #{id} (:selected (deref (om/get-props owner)))))
+  [selection id]
+  (some #{id} selection))
 
 (defn select-letter!
-  [app owner id]
-  (when-not (selected? owner id)
-    (om/transact! app #(update-in % [:selected] conj id))))
+  [app selection id]
+  (when-not (selected? selection id)
+    (om/transact! app #(update-in % [:selected] conj id))
+    (om/transact! app #(update-in % [:board] (fn [board]
+                                                 (mapv  (fn [{:keys [letter id] :as l}]
+                                                          (assoc l :selected (not (nil? (some #{id} selection))))) board))))))
 
 
 (defmethod letter-event :hover
   [[_ id] app owner]
   (when-let [capture (om/get-state owner [:clicked])]
-    (select-letter! app owner id)))
+    (let [selection (:selected (deref(om/get-props owner)))]
+      (select-letter! app selection id))))
 
 
 (defmethod letter-event :click
   [[_ id] app owner]
-  (let [{:keys [clicked]} (om/get-state owner)]
-    (select-letter! app owner id)
-    (when clicked (om/update! app :selected []))
+  (let [{:keys [clicked]} (om/get-state owner)
+        selection (:selected (deref (om/get-props owner)))]
+    (select-letter! app selection id)
+    (when clicked
+      (om/update! app :selected []))
     (om/set-state! owner [:clicked] (not clicked))))
 
 (defn letter-view
-  [{:keys [letter id] :as app} owner]
+  [{:keys [letter id selected] :as app} owner]
   (reify
     om/IRenderState
     (render-state
      [_ state]
      (let [values (om/get-shared owner :values)
-          chan (om/get-state owner [:chan]) ]
-       (dom/div #js {:className "letter"
+          chan (om/get-state owner [:chan])
+           style (if selected "letter selected" "letter" )]
+       (dom/div #js {:className style
                      :onClick #(put! chan [:click id])
                      :onMouseOver  #(put! chan [:hover id])}
                 (dom/div #js {:className "holder"}
@@ -60,6 +71,7 @@
                          (dom/h1 nil (name letter))))))))
 
 (defn board-view
+  "Display the 4x4 letters board."
   [app owner]
   (reify
     om/IInitState
@@ -84,17 +96,18 @@
 
 (defn selected-view
   "Selected letter view."
-  [app owner]
+  [letter owner]
   (om/component
-   (dom/span nil app)))
+   (dom/span nil (name (:letter letter)))))
 
 (defn selection-view
+  "Dsplays the current selected letters."
   [app owner]
   (reify
     om/IRenderState
     (render-state [_ state]
                  (apply dom/span nil
-                        (om/build-all letter-view (:selected app) {:fn (partial id->letter owner)})))))
+                        (om/build-all selected-view (:selected app) {:fn (partial id->letter owner)})))))
 
 (defn app-view [app owner]
   (reify
