@@ -2,15 +2,17 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [cljs.core.async :refer [chan put! <!]]))
+            [cljs.core.async :refer [chan put! <!]]
+            [clojure.string :as string]))
 
 (enable-console-print!)
 
 
-(def app-state (atom {:selected []
-                      :board [{:letter :A, :id 0} {:letter :B, :id 1} {:letter :E, :id 2} {:letter :Y, :id 3} {:letter :P, :id 4} {:letter :I, :id 5} {:letter :D, :id 6} {:letter :C, :id 7} {:letter :L, :id 8} {:letter :A, :id 9} {:letter :N, :id 10} {:letter :N, :id 11} {:letter :E, :id 12} {:letter :R, :id 13} {:letter :R, :id 14} {:letter :E, :id 15}]}))
+(def app-state (atom {:board [{:letter :A, :id 0} {:letter :B, :id 1} {:letter :E, :id 2} {:letter :Y, :id 3} {:letter :P, :id 4} {:letter :I, :id 5} {:letter :D, :id 6} {:letter :C, :id 7} {:letter :L, :id 8} {:letter :A, :id 9} {:letter :N, :id 10} {:letter :N, :id 11} {:letter :E, :id 12} {:letter :R, :id 13} {:letter :R, :id 14} {:letter :E, :id 15}]}))
 
 (def letter-values {:P 2 :R 2 :Q 4 :Y 4 :Z 4 })
+
+(def multiples {0 3})
 
 (defn id->letter [owner id]
   (let [{:keys [board]} (om/get-props owner)]
@@ -18,7 +20,6 @@
 
 
 (defmulti letter-event (fn [[e _] owner] e))
-
 
 
 (defmethod letter-event :hover
@@ -37,20 +38,26 @@
       (om/set-state! owner [:captured] []))
     (om/set-state! owner [:clicked] (not clicked))))
 
+
+
+
 (defn letter-view
   [{:keys [letter id] :as app} owner]
   (reify
     om/IRenderState
     (render-state
      [_ {:as state :keys [chan captured]}]
-     (let [values (om/get-shared owner :values)
-           style (if (some #{id} captured) "letter selected" "letter" )]
-       (dom/div #js {:className style
+     (let [{:keys [values multiples]} (om/get-shared owner)
+           styles ["letter"]
+           styles (if (some #{id} captured) (conj styles "selected") styles )]
+       (dom/div #js {:className (string/join " " styles)
                      :onClick #(put! chan [:click id])
-                     :onMouseOver  #(put! chan [:hover id])}
+                     }
                 (dom/div #js {:className "holder"}
                          (dom/div #js {:className "valeur"} (get values letter 1))
-                         (dom/h1 nil (name letter))))))))
+                         (dom/h1 #js {
+                                      :onMouseOver  #(put! chan [:hover id])
+                                      } (name letter))))))))
 
 (defn board-view
   "Display the 4x4 letters board."
@@ -103,4 +110,5 @@
  app-view
   app-state
   {:target (. js/document (getElementById "app"))
-   :shared {:values letter-values}})
+   :shared {:values letter-values
+            :multiples multiples}})
