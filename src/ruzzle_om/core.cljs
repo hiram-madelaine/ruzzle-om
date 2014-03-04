@@ -81,7 +81,7 @@
     om/IRenderState
     (render-state [_ {:as state :keys [chan captured]}]
                  (apply dom/span nil
-                        (om/build-all selected-view (:captured state) {:fn (partial id->letter owner)})))))
+                        (om/build-all selected-view captured {:fn (partial id->letter owner)})))))
 
 (defn app-view [app owner]
   (reify
