@@ -17,52 +17,34 @@
     (first (filter #(= id (:id %)) board))))
 
 
+(defmulti letter-event (fn [[e _] owner] e))
 
-(defmulti letter-event (fn [[e _] app owner] e))
-
-
-(defn get-selection [owner]
-  (:selected (deref (om/get-props owner))))
-
-(defn selected?
-  "Is the id of a letter already selected ?"
-  [selection id]
-  (some #{id} selection))
-
-(defn select-letter!
-  [app selection id]
-  (when-not (selected? selection id)
-    (om/transact! app #(update-in % [:selected] conj id))
-    (om/transact! app #(update-in % [:board] (fn [board]
-                                                 (mapv  (fn [{:keys [letter id] :as l}]
-                                                          (assoc l :selected (not (nil? (some #{id} selection))))) board))))))
 
 
 (defmethod letter-event :hover
-  [[_ id] app owner]
+  [[_ id] owner]
   (when-let [capture (om/get-state owner [:clicked])]
-    (let [selection (:selected (deref(om/get-props owner)))]
-      (select-letter! app selection id))))
+    (let [captured (om/get-state owner [:captured])]
+      (when-not (some #{id} captured)
+        (om/set-state! owner [:captured] (conj captured id))))))
 
 
 (defmethod letter-event :click
-  [[_ id] app owner]
-  (let [{:keys [clicked]} (om/get-state owner)
-        selection (:selected (deref (om/get-props owner)))]
-    (select-letter! app selection id)
+  [[_ id] owner]
+  (let [{:keys [clicked captured]} (om/get-state owner)]
+        (om/set-state! owner [:captured] (conj captured id))
     (when clicked
-      (om/update! app :selected []))
+      (om/set-state! owner [:captured] []))
     (om/set-state! owner [:clicked] (not clicked))))
 
 (defn letter-view
-  [{:keys [letter id selected] :as app} owner]
+  [{:keys [letter id] :as app} owner]
   (reify
     om/IRenderState
     (render-state
-     [_ state]
+     [_ {:as state :keys [chan captured]}]
      (let [values (om/get-shared owner :values)
-          chan (om/get-state owner [:chan])
-           style (if selected "letter selected" "letter" )]
+           style (if (some #{id} captured) "letter selected" "letter" )]
        (dom/div #js {:className style
                      :onClick #(put! chan [:click id])
                      :onMouseOver  #(put! chan [:hover id])}
@@ -78,17 +60,17 @@
     (init-state [_]
                 {:chan (chan)
                  :clicked false
-                 :selected []})
+                 :captured []})
     om/IWillMount
     (will-mount [_]
        (let [chan (om/get-state owner [:chan])]
          (go (loop []
                (let [r (<! chan)]
-                 (letter-event r app owner)
+                 (letter-event r owner)
                  (recur))))))
     om/IRenderState
     (render-state
-     [_ state]
+     [_ {:as state :keys [clicked captured]}]
      (apply dom/div #js {:className "board"}
               (om/build-all letter-view (:board app)
                             {:key :id
