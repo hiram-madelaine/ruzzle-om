@@ -40,8 +40,8 @@
 
 
 
-
 (defn letter-view
+  "Handle the display of a single letter"
   [{:keys [letter id] :as app} owner]
   (reify
     om/IRenderState
@@ -51,13 +51,10 @@
            styles ["letter"]
            styles (if (some #{id} captured) (conj styles "selected") styles )]
        (dom/div #js {:className (string/join " " styles)
-                     :onClick #(put! chan [:click id])
-                     }
+                     :onClick #(put! chan [:click id])}
                 (dom/div #js {:className "holder"}
                          (dom/div #js {:className "valeur"} (get values letter 1))
-                         (dom/h1 #js {
-                                      :onMouseOver  #(put! chan [:hover id])
-                                      } (name letter))))))))
+                         (dom/h1 #js {:onMouseOver  #(put! chan [:hover id])} (name letter))))))))
 
 (defn board-view
   "Display the 4x4 letters board."
