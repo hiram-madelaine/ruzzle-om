@@ -27,16 +27,16 @@
   (when-let [capture (om/get-state owner [:clicked])]
     (let [captured (om/get-state owner [:captured])]
       (when-not (some #{id} captured)
-        (om/set-state! owner [:captured] (conj captured id))))))
+        (om/update-state! owner [:captured] #(conj % id))))))
 
 
 (defmethod letter-event :click
   [[_ id] owner]
-  (let [{:keys [clicked captured]} (om/get-state owner)]
-        (om/set-state! owner [:captured] (conj captured id))
+  (let [{:keys [clicked ]} (om/get-state owner)]
+        (om/update-state! owner [:captured] #(conj % id))
     (when clicked
       (om/set-state! owner [:captured] []))
-    (om/set-state! owner [:clicked] (not clicked))))
+    (om/update-state! owner [:clicked] not)))
 
 
 
