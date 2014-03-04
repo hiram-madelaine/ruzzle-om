@@ -56,18 +56,6 @@
   "Display the 4x4 letters board."
   [app owner]
   (reify
-    om/IInitState
-    (init-state [_]
-                {:chan (chan)
-                 :clicked false
-                 :captured []})
-    om/IWillMount
-    (will-mount [_]
-       (let [chan (om/get-state owner [:chan])]
-         (go (loop []
-               (let [r (<! chan)]
-                 (letter-event r owner)
-                 (recur))))))
     om/IRenderState
     (render-state
      [_ {:as state :keys [clicked captured]}]
@@ -87,16 +75,29 @@
   [app owner]
   (reify
     om/IRenderState
-    (render-state [_ state]
+    (render-state [_ {:as state :keys [chan captured]}]
                  (apply dom/span nil
-                        (om/build-all selected-view (:selected app) {:fn (partial id->letter owner)})))))
+                        (om/build-all selected-view (:captured state) {:fn (partial id->letter owner)})))))
 
 (defn app-view [app owner]
   (reify
+   om/IInitState
+    (init-state [_]
+                {:chan (chan)
+                 :clicked false
+                 :captured []})
+    om/IWillMount
+    (will-mount [_]
+       (let [chan (om/get-state owner [:chan])]
+         (go (loop []
+               (let [r (<! chan)]
+                 (letter-event r owner)
+                 (recur))))))
     om/IRenderState
     (render-state [_ state]
-                  (dom/div nil (om/build board-view app)
-                           (om/build selection-view app)))))
+                  (dom/div nil
+                           (om/build board-view app {:state state})
+                           (om/build selection-view app {:state state})))))
 
 (om/root
  app-view
